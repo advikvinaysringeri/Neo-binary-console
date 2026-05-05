@@ -1,0 +1,182 @@
+```html id="finalcode1"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Binary Terminal Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    color: #00ff9f;
+    font-family: "Courier New", monospace;
+}
+
+.terminal {
+    padding: 20px;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.output {
+    margin: 5px 0;
+    white-space: pre-wrap;
+}
+
+.line {
+    display: flex;
+}
+
+.prompt {
+    margin-right: 8px;
+}
+
+input {
+    background: transparent;
+    border: none;
+    color: #00ff9f;
+    outline: none;
+    font-family: inherit;
+    font-size: 16px;
+    width: 100%;
+}
+
+.cursor {
+    width: 10px;
+    background: #00ff9f;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%,100% {opacity:1;}
+    50% {opacity:0;}
+}
+
+.error { color: #ff5555; }
+.success { color: #00ff9f; }
+</style>
+</head>
+
+<body>
+
+<div class="terminal" id="terminal">
+    <div class="output">⚡ Binary Terminal Pro</div>
+    <div class="output">Commands: encode TEXT | decode BINARY | clear | help</div>
+
+    <div class="line">
+        <span class="prompt">></span>
+        <input id="input" autofocus>
+        <span class="cursor"></span>
+    </div>
+</div>
+
+<script>
+const input = document.getElementById("input");
+const terminal = document.getElementById("terminal");
+
+input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        const cmd = input.value.trim();
+        print("> " + cmd);
+        handleCommand(cmd);
+        input.value = "";
+        scrollBottom();
+    }
+});
+
+function print(text, type="success") {
+    const div = document.createElement("div");
+    div.className = "output " + type;
+    div.textContent = text;
+    terminal.insertBefore(div, terminal.lastElementChild);
+}
+
+function handleCommand(cmd) {
+    if (cmd.startsWith("encode ")) {
+        encodeText(cmd.slice(7));
+    } 
+    else if (cmd.startsWith("decode ")) {
+        decodeBinary(cmd.slice(7));
+    } 
+    else if (cmd === "clear") {
+        document.querySelectorAll(".output").forEach(el => el.remove());
+    } 
+    else if (cmd === "help") {
+        print("encode TEXT  → text to binary");
+        print("decode BINARY → binary to text");
+        print("clear → clear terminal");
+    } 
+    else {
+        print("❌ Unknown command", "error");
+    }
+}
+
+/* ✅ FIXED ENCODER */
+function encodeText(text) {
+    if (!text) {
+        print("❌ No text provided", "error");
+        return;
+    }
+
+    let result = [];
+
+    for (let i = 0; i < text.length; i++) {
+        let code = text.charCodeAt(i);
+
+        // ensure valid ASCII range
+        if (code > 255) {
+            print("❌ Unsupported character detected", "error");
+            return;
+        }
+
+        let binary = code.toString(2).padStart(8, "0");
+        result.push(binary);
+    }
+
+    print(result.join(" "));
+}
+
+/* ✅ FIXED DECODER */
+function decodeBinary(binary) {
+    if (!binary) {
+        print("❌ No binary provided", "error");
+        return;
+    }
+
+    let parts = binary.trim().split(/\s+/);
+    let result = "";
+
+    for (let b of parts) {
+
+        // only 0s and 1s allowed
+        if (!/^[01]+$/.test(b)) {
+            print("❌ Invalid characters in binary", "error");
+            return;
+        }
+
+        // auto-fix length (pad to 8)
+        while (b.length % 8 !== 0) {
+            b = "0" + b;
+        }
+
+        // split into 8-bit chunks if longer
+        for (let i = 0; i < b.length; i += 8) {
+            let byte = b.slice(i, i+8);
+            let char = String.fromCharCode(parseInt(byte, 2));
+            result += char;
+        }
+    }
+
+    print(result);
+}
+
+function scrollBottom() {
+    terminal.scrollTop = terminal.scrollHeight;
+}
+</script>
+
+</body>
+</html>
+```
